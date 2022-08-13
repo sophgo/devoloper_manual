@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TPU-MLIR开发参考手册 &mdash; TPU-MLIR 0.3.3 文档</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/translations.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="00_disclaimer.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#" class="icon icon-home"> TPU-MLIR
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">目录</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="01_introduction.html">1. TPU-MLIR简介</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_environment.html">2. 开发环境配置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_user_interface.html">3. 用户界面</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_over_design.html">4. 整体设计</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_frontend.html">5. 前端转换</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_quantization.html">6. 量化</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_calibration.html">7. Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_lowering.html">8. Lowering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_subnet.html">9. SubNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_layergroup.html">10. LayerGroup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_memassign.html">11. GMEM分配</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_codegen.html">12. CodeGen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">TPU-MLIR</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+      <li>TPU-MLIR开发参考手册</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tpu-mlir">
+<h1>TPU-MLIR开发参考手册<a class="headerlink" href="#tpu-mlir" title="此标题的永久链接"></a></h1>
+<div class="line-block">
+<div class="line"><strong>发布记录</strong></div>
+</div>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 25%" />
+<col style="width: 55%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>版本</p></th>
+<th class="head"><p>发布日期</p></th>
+<th class="head"><p>说明</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>v0.1.0</p></td>
+<td><p>2022.08.10</p></td>
+<td><p>初版发布，支持 <code class="docutils literal notranslate"><span class="pre">resnet/mobilenet/vgg/ssd/yolov5s</span></code> ，并用yolov5s作为用例。</p></td>
+</tr>
+</tbody>
+</table>
+<div class="toctree-wrapper compound" id="mastertoc">
+<p class="caption" role="heading"><span class="caption-text">目录</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="01_introduction.html">1. TPU-MLIR简介</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_environment.html">2. 开发环境配置</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="02_environment.html#code-load">2.1. 代码下载</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_environment.html#docker">2.2. Docker配置</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_environment.html#modelzoo">2.3. ModelZoo(可选)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_environment.html#compiler">2.4. 代码编译</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="03_user_interface.html">3. 用户界面</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="03_user_interface.html#model-transform-py">3.1. model_transform.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_user_interface.html#run-calibration-py">3.2. run_calibration.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_user_interface.html#model-deploy-py">3.3. model_deploy.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_user_interface.html#tools">3.4. 其他工具</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="03_user_interface.html#model-runner-py">3.4.1. model_runner.py</a></li>
+<li class="toctree-l3"><a class="reference internal" href="03_user_interface.html#npz-tool-py">3.4.2. npz_tool.py</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="04_over_design.html">4. 整体设计</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="04_over_design.html#dialect">4.1. 分层</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_over_design.html#top-pass">4.2. Top Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_over_design.html#tpu-pass">4.3. Tpu Pass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="05_frontend.html">5. 前端转换</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="05_frontend.html#id2">5.1. 主要工作</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05_frontend.html#id3">5.2. 工作流程</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05_frontend.html#id4">5.3. 算子转换样例</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="06_quantization.html">6. 量化</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="06_quantization.html#quantization">6.1. 基本概念</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="06_quantization.html#id3">6.1.1. 非对称量化</a></li>
+<li class="toctree-l3"><a class="reference internal" href="06_quantization.html#id4">6.1.2. 对称量化</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="06_quantization.html#scale">6.2. Scale转换</a></li>
+<li class="toctree-l2"><a class="reference internal" href="06_quantization.html#id5">6.3. 量化推导</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="06_quantization.html#convolution">6.3.1. Convolution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="06_quantization.html#innerproduct">6.3.2. InnerProduct</a></li>
+<li class="toctree-l3"><a class="reference internal" href="06_quantization.html#add">6.3.3. Add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="06_quantization.html#avgpool">6.3.4. AvgPool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="07_calibration.html">7. Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_lowering.html">8. Lowering</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="08_lowering.html#id1">8.1. 基本过程</a></li>
+<li class="toctree-l2"><a class="reference internal" href="08_lowering.html#id3">8.2. 混合精度</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="09_subnet.html">9. SubNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_layergroup.html">10. LayerGroup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="10_layergroup.html#id1">10.1. 基本概念</a></li>
+<li class="toctree-l2"><a class="reference internal" href="10_layergroup.html#backwardh">10.2. BackwardH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="10_layergroup.html#mem">10.3. 划分Mem周期</a></li>
+<li class="toctree-l2"><a class="reference internal" href="10_layergroup.html#lmem">10.4. LMEM分配</a></li>
+<li class="toctree-l2"><a class="reference internal" href="10_layergroup.html#group">10.5. 划分最优Group</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="11_memassign.html">11. GMEM分配</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_codegen.html">12. CodeGen</a></li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="00_disclaimer.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2022, SOPHGO.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

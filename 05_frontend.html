@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>5. 前端转换 &mdash; TPU-MLIR 0.3.3 文档</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/translations.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="6. 量化" href="06_quantization.html" />
+    <link rel="prev" title="4. 整体设计" href="04_over_design.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> TPU-MLIR
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">目录</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01_introduction.html">1. TPU-MLIR简介</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_environment.html">2. 开发环境配置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_user_interface.html">3. 用户界面</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_over_design.html">4. 整体设计</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">5. 前端转换</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">5.1. 主要工作</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">5.2. 工作流程</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">5.3. 算子转换样例</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="06_quantization.html">6. 量化</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_calibration.html">7. Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_lowering.html">8. Lowering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_subnet.html">9. SubNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_layergroup.html">10. LayerGroup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_memassign.html">11. GMEM分配</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_codegen.html">12. CodeGen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TPU-MLIR</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><span class="section-number">5. </span>前端转换</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/05_frontend.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1><span class="section-number">5. </span>前端转换<a class="headerlink" href="#id1" title="此标题的永久链接"></a></h1>
+<p>本章以onnx为例介绍模型/算子在本工程中的前端转换流程。</p>
+<section id="id2">
+<h2><span class="section-number">5.1. </span>主要工作<a class="headerlink" href="#id2" title="此标题的永久链接"></a></h2>
+<p>前端主要负责将原始模型转换为Top层（芯片无关层）mlir模型的工作（不包含Canonicalize部分，因此生成的文件名为“*_origin.mlir”），这个过程会根据原始模型与运行model_transform.py时输入的参数逐一创建并添加对应的算子（Op），最终生成mlir文件。</p>
+</section>
+<section id="id3">
+<h2><span class="section-number">5.2. </span>工作流程<a class="headerlink" href="#id3" title="此标题的永久链接"></a></h2>
+<ol class="arabic simple">
+<li><p>Input ops 创建</p></li>
+</ol>
+<blockquote>
+<div><p>根据输入数据信息，预处理信息与原始模型的input names创建input_ops，将ops添加进operands列表中。</p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Origin model ops 转换</p></li>
+</ol>
+<blockquote>
+<div><p>获取原模型文件中每个op的属性，根据这些属性创建相应的op，将op逐个添加进operands。</p>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li><p>Output ops 创建</p></li>
+</ol>
+<blockquote>
+<div><p>根据arguments中的output_names获取特定ops的输出，创建output ops，将Op添加进operands。</p>
+</div></blockquote>
+<ol class="arabic simple" start="4">
+<li><p>Mlir生成</p></li>
+</ol>
+<blockquote>
+<div><p>根据arguments与operands生成mlir_txt。</p>
+</div></blockquote>
+<ol class="arabic simple" start="5">
+<li><p>结果保存</p></li>
+</ol>
+<blockquote>
+<div><p>将结果保存为mlir文件，模型的权重单独保存为npz文件。</p>
+</div></blockquote>
+<p>模型的mlir转换过程如图所示(<a class="reference internal" href="#mlir-convert"><span class="std std-ref">MLIR模型转换过程</span></a>)。</p>
+<figure class="align-center" id="id5">
+<span id="mlir-convert"></span><img alt="_images/mlir_convert.png" src="_images/mlir_convert.png" />
+<figcaption>
+<p><span class="caption-number">图 5.1 </span><span class="caption-text">MLIR模型转换过程</span><a class="headerlink" href="#id5" title="此图像的永久链接"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="id4">
+<h2><span class="section-number">5.3. </span>算子转换样例<a class="headerlink" href="#id4" title="此标题的永久链接"></a></h2>
+<p>以onnx格式的Conv op转换为例，转换的过程如图所示(<a class="reference internal" href="#conv-example"><span class="std std-ref">Conv op转换过程</span></a>)。</p>
+<figure class="align-center" id="id6">
+<span id="conv-example"></span><img alt="_images/conv_example.png" src="_images/conv_example.png" />
+<figcaption>
+<p><span class="caption-number">图 5.2 </span><span class="caption-text">Conv op转换过程</span><a class="headerlink" href="#id6" title="此图像的永久链接"></a></p>
+</figcaption>
+</figure>
+<p>补充说明</p>
+<ol class="arabic simple">
+<li><p>对于卷积这样带有权重的算子，前端会为其权重额外创建Op。</p></li>
+<li><p>转换Conv op前，应当先在tablegen文件中（即TopOps.td）对Top层的Conv算子进行定义，后续会依据该定义与输入的onnx算子来生成对应的mlir txt，如图所示(<a class="reference internal" href="#conv-def"><span class="std std-ref">Top::ConvOp定义(上)与conv mlir txt(下)</span></a>)。</p></li>
+</ol>
+<figure class="align-center" id="id7">
+<span id="conv-def"></span><img alt="_images/conv_defnmlir.png" src="_images/conv_defnmlir.png" />
+<figcaption>
+<p><span class="caption-number">图 5.3 </span><span class="caption-text">Top::ConvOp定义(上)与conv mlir txt(下)</span><a class="headerlink" href="#id7" title="此图像的永久链接"></a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="04_over_design.html" class="btn btn-neutral float-left" title="4. 整体设计" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="06_quantization.html" class="btn btn-neutral float-right" title="6. 量化" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2022, SOPHGO.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>6. 量化 &mdash; TPU-MLIR 0.3.3 文档</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/translations.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="7. Calibration" href="07_calibration.html" />
+    <link rel="prev" title="5. 前端转换" href="05_frontend.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> TPU-MLIR
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">目录</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01_introduction.html">1. TPU-MLIR简介</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_environment.html">2. 开发环境配置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_user_interface.html">3. 用户界面</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_over_design.html">4. 整体设计</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_frontend.html">5. 前端转换</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">6. 量化</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#quantization">6.1. 基本概念</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">6.1.1. 非对称量化</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">6.1.2. 对称量化</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scale">6.2. Scale转换</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">6.3. 量化推导</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#convolution">6.3.1. Convolution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#innerproduct">6.3.2. InnerProduct</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#add">6.3.3. Add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#avgpool">6.3.4. AvgPool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="07_calibration.html">7. Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_lowering.html">8. Lowering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_subnet.html">9. SubNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_layergroup.html">10. LayerGroup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_memassign.html">11. GMEM分配</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_codegen.html">12. CodeGen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TPU-MLIR</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><span class="section-number">6. </span>量化</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/06_quantization.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1><span class="section-number">6. </span>量化<a class="headerlink" href="#id1" title="此标题的永久链接"></a></h1>
+<p>量化理论源于论文：Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference</p>
+<p>该论文地址：<a class="reference external" href="https://arxiv.org/abs/1712.05877">https://arxiv.org/abs/1712.05877</a></p>
+<p>本章介绍TPU-MLIR的量化设计，重点在该论文在实际量化中的应用。</p>
+<section id="quantization">
+<span id="id2"></span><h2><span class="section-number">6.1. </span>基本概念<a class="headerlink" href="#quantization" title="此标题的永久链接"></a></h2>
+<p>INT8量化分为非对称量化和对称量化。对称量化是非对称量化的一个特例，通常对称量化的性能会优于非对称量化，而精度上非对称量化更优。</p>
+<section id="id3">
+<h3><span class="section-number">6.1.1. </span>非对称量化<a class="headerlink" href="#id3" title="此标题的永久链接"></a></h3>
+<figure class="align-center" id="id6">
+<a class="reference internal image-reference" href="_images/quant_asym.png"><img alt="_images/quant_asym.png" src="_images/quant_asym.png" style="height: 9.5cm;" /></a>
+<figcaption>
+<p><span class="caption-number">图 6.1 </span><span class="caption-text">非对称量化</span><a class="headerlink" href="#id6" title="此图像的永久链接"></a></p>
+</figcaption>
+</figure>
+<p>如上图所示，非对称量化其实就是把[min,max]范围内的数值定点到[-128, 127]或者[0, 255]区间。</p>
+<p>从int8到float的量化公式表达如下：</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}r &amp;= S(q-Z) \\
+S &amp;= \frac{max-min}{qmax-qmin} \\
+Z &amp;= Round(- \frac{min}{S} + qmin)\end{split}\]</div>
+<p>其中r是真实的值，float类型；q是量化后的值，INT8或者UINT8类型；</p>
+<p>S表示scale，是float；Z是zeropoint，是INT8类型；</p>
+<p>当量化到INT8时，qmax=127,qmin=-128; UINT8时，qmax=255,qmin=0</p>
+<p>反过来从float到int8的量化公式如下：</p>
+</section>
+<section id="id4">
+<h3><span class="section-number">6.1.2. </span>对称量化<a class="headerlink" href="#id4" title="此标题的永久链接"></a></h3>
+<p>对称量化是非对称量化Z=0时的特例，公式表达如下：</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}i8\_value &amp;= f32\_value \times \frac{128}{threshold} \\
+f32\_value &amp;= i8\_value \times \frac{threshold}{128}\end{split}\]</div>
+<p>threshold是阈值，可以理解为Tensor的范围是[-threshold, threshold]</p>
+<p>这里 <span class="math notranslate nohighlight">\(S = threshold / 128\)</span>，通常是activation情况；</p>
+<p>对于weight，一般 <span class="math notranslate nohighlight">\(S = threshold / 127\)</span></p>
+<p>对于UINT8，Tensor范围是[0, threshold]，此时 <span class="math notranslate nohighlight">\(S = threshold/ 255.0\)</span></p>
+</section>
+</section>
+<section id="scale">
+<h2><span class="section-number">6.2. </span>Scale转换<a class="headerlink" href="#scale" title="此标题的永久链接"></a></h2>
+<p>论文中的公式表达：</p>
+<div class="math notranslate nohighlight">
+\[M = 2^{-n}M_0，其中M_0取值[0.5,1], n是一个非负数\]</div>
+<p>换个表述来说，就是浮点数Scale，可以转换成Multiplier和rshift，如下表达：</p>
+<div class="math notranslate nohighlight">
+\[Scale = \frac{Multiplier}{2^{rshift}}\]</div>
+<p>举例说明：</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}&amp;y = x \times 0.1234 \\
+&amp;=&gt; y = x \times 0.9872 \times 2^{-3} \\
+&amp;=&gt; y = x \times (0.9872 \times 2^{31}) \times 2^{-34} \\
+&amp;=&gt; y = x \times \frac{2119995857}{1 \ll 34} \\
+&amp;=&gt; y = (x \times 2119995857) \gg 34\end{split}\]</div>
+<p>Multiplier支持的位数越高，就越接近Scale，但是性能会越差。一般芯片会用32位或8位的Multiplier。</p>
+</section>
+<section id="id5">
+<h2><span class="section-number">6.3. </span>量化推导<a class="headerlink" href="#id5" title="此标题的永久链接"></a></h2>
+<p>我们可以用量化公式，对不同的OP进行量化推导，得到其对应的INT8计算方式。</p>
+<p>对称和非对称都用在Activation上，对于权重一般只用对称量化。</p>
+<section id="convolution">
+<span id="conv"></span><h3><span class="section-number">6.3.1. </span>Convolution<a class="headerlink" href="#convolution" title="此标题的永久链接"></a></h3>
+<p>卷积的表示式简略为： <span class="math notranslate nohighlight">\(Y = X_{(n,ic,ih,iw)}\times W_{(oc,ic,kh,kw)} + B_{(1,oc,1,1)}\)</span></p>
+<p>代入int8量化公式，推导如下：</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}float:\quad &amp; Y = X\times W + B \\
+step 0\quad &amp; =&gt; S_y(q_y-Z_y) = S_x(q_x-Z_x)\times S_wq_w + B \\
+step 1\quad &amp; =&gt; q_y - Z_y = S_1(q_x-Z_x)\times q_w + B_1 \\
+step 2\quad &amp; =&gt; q_y - Z_y = S_1 q_x\times q_w  + B_2 \\
+step 3\quad &amp; =&gt; q_y = S_3 (q_x \times q_w + B_3) + Z_{y} \\
+step 4\quad &amp; =&gt; q_y = (q_x \times q_w + b_{i32}) * M_{i32} &gt;&gt; rshift_{i8} + Z_{y}\end{split}\]</div>
+<p>非对称量化特别注意的是，Pad需要填入Zx</p>
+<p>对称量化时，Pad填入0，上述推导中Zx和Zy皆为0</p>
+<p>在PerAxis（或称PerChannal）量化时，会取Filter的每个OC做量化，推导公式不变，但是会有OC个Multiplier、rshift</p>
+</section>
+<section id="innerproduct">
+<h3><span class="section-number">6.3.2. </span>InnerProduct<a class="headerlink" href="#innerproduct" title="此标题的永久链接"></a></h3>
+<p>表达式和推导方式与(<a class="reference internal" href="#conv"><span class="std std-ref">Convolution</span></a>)相同</p>
+</section>
+<section id="add">
+<h3><span class="section-number">6.3.3. </span>Add<a class="headerlink" href="#add" title="此标题的永久链接"></a></h3>
+<p>加法的表达式为： <span class="math notranslate nohighlight">\(Y = A + B\)</span></p>
+<p>代入int8量化公式，推导如下：</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}float:\quad &amp; Y = A + B \\
+step 0\quad &amp; =&gt; S_y (q_y-Z_y) = S_a(q_a-Z_a) + S_b(q_b - Z_b) \\
+step 1(对称) \quad &amp; =&gt; q_y = (q_a * M_a + q_b * M_b)_{i16} &gt;&gt; rshift_{i8} \\
+step 1(非对称) \quad &amp; =&gt; q_y = requant(dequant(q_a) + dequant(q_b))\end{split}\]</div>
+<p>加法最终如何用TPU实现，与TPU具体的指令有关。</p>
+<p>这里对称提供的方式是用INT16做中间buffer；</p>
+<p>非对称是先反量化成float，做加法后再重量化成INT8</p>
+</section>
+<section id="avgpool">
+<h3><span class="section-number">6.3.4. </span>AvgPool<a class="headerlink" href="#avgpool" title="此标题的永久链接"></a></h3>
+<p>平均池化的表达式可以简写为： <span class="math notranslate nohighlight">\(Y_i = \frac{\sum_{j=0}^{k_hk_w}{(X_j)}}{k_h*k_w}\)</span></p>
+<p>代入int8量化公式，推导如下：</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}float:\quad &amp; Y_i = \frac{\sum_{j=0}^{k_hk_w}{(X_j)}}{k_h*k_w} \\
+step0:\quad &amp; =&gt; S_y(y_i - Z_y) = \frac{S_x\sum_{j=0}^{k_hk_w}(x_j-Z_x)}{k_h*k_w}\\
+step1:\quad &amp; =&gt; y_i = \frac{S_x}{S_yk_hk_w}\sum_{j=0}^{k_hk_w}(x_j-Z_x) + Z_y \\
+step2:\quad &amp; =&gt; y_i = \sum_{j=0}^{k_hk_w}(x_j-Z_x) * M_{i32} &gt;&gt; rshift_{i8} + Z_y\end{split}\]</div>
+<p>这里Multiplier可以用32位，也可以用8位；对于对称量化，Zx和Zy为0</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="05_frontend.html" class="btn btn-neutral float-left" title="5. 前端转换" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="07_calibration.html" class="btn btn-neutral float-right" title="7. Calibration" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2022, SOPHGO.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

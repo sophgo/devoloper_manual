@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2. 开发环境配置 &mdash; TPU-MLIR 0.3.3 文档</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/translations.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="3. 用户界面" href="03_user_interface.html" />
+    <link rel="prev" title="1. TPU-MLIR简介" href="01_introduction.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> TPU-MLIR
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">目录</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01_introduction.html">1. TPU-MLIR简介</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2. 开发环境配置</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#code-load">2.1. 代码下载</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#docker">2.2. Docker配置</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#modelzoo">2.3. ModelZoo(可选)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compiler">2.4. 代码编译</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="03_user_interface.html">3. 用户界面</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_over_design.html">4. 整体设计</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_frontend.html">5. 前端转换</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_quantization.html">6. 量化</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_calibration.html">7. Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_lowering.html">8. Lowering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_subnet.html">9. SubNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_layergroup.html">10. LayerGroup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_memassign.html">11. GMEM分配</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_codegen.html">12. CodeGen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TPU-MLIR</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><span class="section-number">2. </span>开发环境配置</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/02_environment.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1><span class="section-number">2. </span>开发环境配置<a class="headerlink" href="#id1" title="此标题的永久链接"></a></h1>
+<p>本章介绍开发环境配置，代码在docker中编译和运行。</p>
+<section id="code-load">
+<span id="id2"></span><h2><span class="section-number">2.1. </span>代码下载<a class="headerlink" href="#code-load" title="此标题的永久链接"></a></h2>
+<p>代码路径：<a class="reference external" href="https://github.com/sophgo/tpu-mlir">https://github.com/sophgo/tpu-mlir</a></p>
+<p>克隆该代码后，需要在Docker中编译。参考下文配置Docker。</p>
+</section>
+<section id="docker">
+<span id="env-setup"></span><h2><span class="section-number">2.2. </span>Docker配置<a class="headerlink" href="#docker" title="此标题的永久链接"></a></h2>
+<p>TPU-MLIR在Docker环境开发，配置好Docker就可以编译和运行了。</p>
+<p>从 DockerHub <a class="reference external" href="https://hub.docker.com/r/sophgo/tpuc_dev">https://hub.docker.com/r/sophgo/tpuc_dev</a> 下载所需的镜像:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>docker pull sophgo/tpuc_dev:latest
+</pre></div>
+</div>
+<p>如果是首次使用Docker，可执行下述命令进行安装和配置（仅首次执行）:</p>
+<div class="highlight-console notranslate" id="docker-configuration"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="gp">$ </span>sudo apt install docker.io
+<span class="linenos">2</span><span class="gp">$ </span>sudo systemctl start docker
+<span class="linenos">3</span><span class="gp">$ </span>sudo systemctl <span class="nb">enable</span> docker
+<span class="linenos">4</span><span class="gp">$ </span>sudo groupadd docker
+<span class="linenos">5</span><span class="gp">$ </span>sudo usermod -aG docker <span class="nv">$USER</span>
+<span class="linenos">6</span><span class="gp">$ </span>newgrp docker
+</pre></div>
+</div>
+<p>确保安装包在当前目录，然后在当前目录创建容器如下：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>docker run --privileged --name myname -v <span class="nv">$PWD</span>:/workspace -it sophgo/tpuc_dev:latest
+<span class="gp"># </span>myname只是举个名字的例子，请指定成自己想要的容器的名字
+</pre></div>
+</div>
+<p>注意TPU-MLIR工程在docker中的路径应该是/workspace/tpu-mlir</p>
+</section>
+<section id="modelzoo">
+<span id="model-zoo"></span><h2><span class="section-number">2.3. </span>ModelZoo(可选)<a class="headerlink" href="#modelzoo" title="此标题的永久链接"></a></h2>
+<p>TPU-MLIR中自带yolov5s模型，如果要跑其他模型，需要下载ModelZoo，路径如下：</p>
+<p><a class="reference external" href="https://github.com/sophgo/model-zoo">https://github.com/sophgo/model-zoo</a></p>
+<p>下载后放在与tpu-mlir同级目录，在docker中的路径应该是/workspace/model-zoo</p>
+</section>
+<section id="compiler">
+<span id="id3"></span><h2><span class="section-number">2.4. </span>代码编译<a class="headerlink" href="#compiler" title="此标题的永久链接"></a></h2>
+<p>在docker的容器中，代码编译方式如下：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span> tpu-mlir
+<span class="gp">$ </span><span class="nb">source</span> ./envsetup.sh
+<span class="gp">$ </span>./build.sh
+</pre></div>
+</div>
+<p>回归验证，如下：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>本工程包含yolov5s.onnx模型，可以直接用来验证
+<span class="gp">$ </span><span class="nb">pushd</span> regression
+<span class="gp">$ </span>./run_model.sh yolov5s
+<span class="gp">$ </span><span class="nb">popd</span>
+</pre></div>
+</div>
+<p>如果要验证更多网络，需要依赖model-zoo，回归时间比较久。</p>
+<p>操作如下：（可选）</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>执行时间很长，该步骤也可以跳过
+<span class="gp">$ </span><span class="nb">pushd</span> regression
+<span class="gp">$ </span>./run_all.sh
+<span class="gp">$ </span><span class="nb">popd</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="01_introduction.html" class="btn btn-neutral float-left" title="1. TPU-MLIR简介" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="03_user_interface.html" class="btn btn-neutral float-right" title="3. 用户界面" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2022, SOPHGO.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

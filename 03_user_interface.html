@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3. 用户界面 &mdash; TPU-MLIR 0.3.3 文档</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/translations.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="4. 整体设计" href="04_over_design.html" />
+    <link rel="prev" title="2. 开发环境配置" href="02_environment.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> TPU-MLIR
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">目录</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01_introduction.html">1. TPU-MLIR简介</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_environment.html">2. 开发环境配置</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3. 用户界面</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#model-transform-py">3.1. model_transform.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-calibration-py">3.2. run_calibration.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#model-deploy-py">3.3. model_deploy.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tools">3.4. 其他工具</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#model-runner-py">3.4.1. model_runner.py</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#npz-tool-py">3.4.2. npz_tool.py</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="04_over_design.html">4. 整体设计</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_frontend.html">5. 前端转换</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_quantization.html">6. 量化</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_calibration.html">7. Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_lowering.html">8. Lowering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_subnet.html">9. SubNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_layergroup.html">10. LayerGroup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_memassign.html">11. GMEM分配</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_codegen.html">12. CodeGen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TPU-MLIR</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><span class="section-number">3. </span>用户界面</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/03_user_interface.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1><span class="section-number">3. </span>用户界面<a class="headerlink" href="#id1" title="此标题的永久链接"></a></h1>
+<p>本章介绍用户的使用界面。</p>
+<p>基本操作过程是用 <code class="docutils literal notranslate"><span class="pre">model_transform.py</span></code> 将模型转成mlir文件，然后用
+<code class="docutils literal notranslate"><span class="pre">model_deploy.py</span></code> 将mlir转成对应的model。如果需要转INT8模型，则
+需要进行calibration。大致过程如下：</p>
+<figure class="align-center" id="id3">
+<a class="reference internal image-reference" href="_images/ui_0.png"><img alt="_images/ui_0.png" src="_images/ui_0.png" style="height: 9.5cm;" /></a>
+<figcaption>
+<p><span class="caption-number">图 3.1 </span><span class="caption-text">用户界面1</span><a class="headerlink" href="#id3" title="此图像的永久链接"></a></p>
+</figcaption>
+</figure>
+<p>另外支持一下复杂的情况，支持图片输入带预处理，支持多输入情景，如下：</p>
+<figure class="align-center" id="id4">
+<a class="reference internal image-reference" href="_images/ui_1.png"><img alt="_images/ui_1.png" src="_images/ui_1.png" style="height: 9.5cm;" /></a>
+<figcaption>
+<p><span class="caption-number">图 3.2 </span><span class="caption-text">用户界面2</span><a class="headerlink" href="#id4" title="此图像的永久链接"></a></p>
+</figcaption>
+</figure>
+<section id="model-transform-py">
+<span id="model-transform"></span><h2><span class="section-number">3.1. </span>model_transform.py<a class="headerlink" href="#model-transform-py" title="此标题的永久链接"></a></h2>
+<p>用于将各种神经网络模型转换成MLIR文件，支持的参数如下:</p>
+<table class="colwidths-given docutils align-default" id="id5">
+<caption><span class="caption-number">表 3.1 </span><span class="caption-text">model_transform 参数功能</span><a class="headerlink" href="#id5" title="此表格的永久链接"></a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 13%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>参数名</p></th>
+<th class="head"><p>必选？</p></th>
+<th class="head"><p>说明</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>model_name</p></td>
+<td><p>是</p></td>
+<td><p>指定模型名称</p></td>
+</tr>
+<tr class="row-odd"><td><p>model_def</p></td>
+<td><p>是</p></td>
+<td><p>指定输入文件用于验证，可以是图片或npy或npz；可以不指定，则不会正确性验证</p></td>
+</tr>
+<tr class="row-even"><td><p>input_shapes</p></td>
+<td><p>否</p></td>
+<td><p>指定输入的shape，例如[[1,3,640,640]]；二维数组，可以支持多输入情况</p></td>
+</tr>
+<tr class="row-odd"><td><p>resize_dims</p></td>
+<td><p>否</p></td>
+<td><p>原始图片需要resize之后的尺寸；如果不指定，则resize成模型的输入尺寸</p></td>
+</tr>
+<tr class="row-even"><td><p>keep_aspect_ratio</p></td>
+<td><p>否</p></td>
+<td><p>在Resize时是否保持长宽比，默认为false；设置时会对不足部分补0</p></td>
+</tr>
+<tr class="row-odd"><td><p>mean</p></td>
+<td><p>否</p></td>
+<td><p>图像每个通道的均值，默认为0.0,0.0,0.0</p></td>
+</tr>
+<tr class="row-even"><td><p>scale</p></td>
+<td><p>否</p></td>
+<td><p>图片每个通道的比值，默认为1.0,1.0,1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>pixel_format</p></td>
+<td><p>否</p></td>
+<td><p>图片类型，可以是rgb、bgr、gray、rgbd四种情况</p></td>
+</tr>
+<tr class="row-even"><td><p>output_names</p></td>
+<td><p>否</p></td>
+<td><p>指定输出的名称，如果不指定，则用模型的输出；指定后用该指定名称做输出</p></td>
+</tr>
+<tr class="row-odd"><td><p>test_input</p></td>
+<td><p>否</p></td>
+<td><p>指定输入文件用于验证，可以是图片或npy或npz；可以不指定，则不会正确性验证</p></td>
+</tr>
+<tr class="row-even"><td><p>test_result</p></td>
+<td><p>否</p></td>
+<td><p>指定验证后的输出文件</p></td>
+</tr>
+<tr class="row-odd"><td><p>excepts</p></td>
+<td><p>否</p></td>
+<td><p>指定需要排除验证的网络层的名称，多个用,隔开</p></td>
+</tr>
+<tr class="row-even"><td><p>mlir</p></td>
+<td><p>是</p></td>
+<td><p>指定输出的mlir文件名称和路径</p></td>
+</tr>
+</tbody>
+</table>
+<p>转成mlir文件后，会生成一个 <code class="docutils literal notranslate"><span class="pre">${model_name}_in_f32.npz</span></code> 文件，该文件是后续模型的输入文件。</p>
+</section>
+<section id="run-calibration-py">
+<span id="run-calibration"></span><h2><span class="section-number">3.2. </span>run_calibration.py<a class="headerlink" href="#run-calibration-py" title="此标题的永久链接"></a></h2>
+<p>用少量的样本做calibration，得到网络的量化表，即每一层op的threshold/min/max。</p>
+<p>支持的参数如下：</p>
+<table class="colwidths-given docutils align-default" id="id6">
+<caption><span class="caption-number">表 3.2 </span><span class="caption-text">run_calibration 参数功能</span><a class="headerlink" href="#id6" title="此表格的永久链接"></a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 13%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>参数名</p></th>
+<th class="head"><p>必选？</p></th>
+<th class="head"><p>说明</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>无</p></td>
+<td><p>是</p></td>
+<td><p>指定mlir文件</p></td>
+</tr>
+<tr class="row-odd"><td><p>dataset</p></td>
+<td><p>否</p></td>
+<td><p>指定输入样本的目录，该路径放对应的图片，或npz，或npy</p></td>
+</tr>
+<tr class="row-even"><td><p>data_list</p></td>
+<td><p>否</p></td>
+<td><p>指定样本列表，与dataset必须二选一</p></td>
+</tr>
+<tr class="row-odd"><td><p>input_num</p></td>
+<td><p>否</p></td>
+<td><p>指定校准数量，如果为0，则使用全部样本</p></td>
+</tr>
+<tr class="row-even"><td><p>tune_num</p></td>
+<td><p>否</p></td>
+<td><p>指定微调样本数量，默认为10</p></td>
+</tr>
+<tr class="row-odd"><td><p>histogram_bin_num</p></td>
+<td><p>否</p></td>
+<td><p>直方图bin数量，默认2048</p></td>
+</tr>
+<tr class="row-even"><td><p>o</p></td>
+<td><p>是</p></td>
+<td><p>输出calibration table文件</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="model-deploy-py">
+<span id="model-deploy"></span><h2><span class="section-number">3.3. </span>model_deploy.py<a class="headerlink" href="#model-deploy-py" title="此标题的永久链接"></a></h2>
+<p>将mlir文件转换成相应的model，参数说明如下：</p>
+<table class="colwidths-given docutils align-default" id="id7">
+<caption><span class="caption-number">表 3.3 </span><span class="caption-text">model_deploy 参数功能</span><a class="headerlink" href="#id7" title="此表格的永久链接"></a></caption>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 13%" />
+<col style="width: 64%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>参数名</p></th>
+<th class="head"><p>必选？</p></th>
+<th class="head"><p>说明</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>mlir</p></td>
+<td><p>是</p></td>
+<td><p>指定mlir文件</p></td>
+</tr>
+<tr class="row-odd"><td><p>quantize</p></td>
+<td><p>是</p></td>
+<td><p>指定默认量化类型，支持F32/F16/BF16/INT8</p></td>
+</tr>
+<tr class="row-even"><td><p>chip</p></td>
+<td><p>是</p></td>
+<td><p>指定模型将要用到的平台，支持bm1684x（目前只支持这一种，后续会支持多款TPU
+平台）</p></td>
+</tr>
+<tr class="row-odd"><td><p>calibration_table</p></td>
+<td><p>否</p></td>
+<td><p>指定量化表路径，当存在INT8量化的时候需要量化表</p></td>
+</tr>
+<tr class="row-even"><td><p>tolerance</p></td>
+<td><p>否</p></td>
+<td><p>表示 MLIR 量化后的结果与 MLIR fp32推理结果相似度的误差容忍度</p></td>
+</tr>
+<tr class="row-odd"><td><p>correctness</p></td>
+<td><p>否</p></td>
+<td><p>表示仿真器运行的结果与MLIR量化后的结果相似度的误差容忍度，默认0.99,0.90</p></td>
+</tr>
+<tr class="row-even"><td><p>test_input</p></td>
+<td><p>否</p></td>
+<td><p>指定输入文件用于验证，可以是图片或npy或npz；可以不指定，则不会正确性验证</p></td>
+</tr>
+<tr class="row-odd"><td><p>test_reference</p></td>
+<td><p>否</p></td>
+<td><p>用于验证模型正确性的参考数据（使用npz格式）。其为各算子的计算结果</p></td>
+</tr>
+<tr class="row-even"><td><p>excepts</p></td>
+<td><p>否</p></td>
+<td><p>指定需要排除验证的网络层的名称，多个用,隔开</p></td>
+</tr>
+<tr class="row-odd"><td><p>model</p></td>
+<td><p>是</p></td>
+<td><p>指定输出的model文件名称和路径</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="tools">
+<span id="id2"></span><h2><span class="section-number">3.4. </span>其他工具<a class="headerlink" href="#tools" title="此标题的永久链接"></a></h2>
+<section id="model-runner-py">
+<h3><span class="section-number">3.4.1. </span>model_runner.py<a class="headerlink" href="#model-runner-py" title="此标题的永久链接"></a></h3>
+<p>对模型进行推理，支持bmodel/mlir/onnx/tflite。</p>
+<p>执行参考如下：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>model_runner.py <span class="se">\</span>
+   --input sample_in_f32.npz <span class="se">\</span>
+   --model sample.bmodel <span class="se">\</span>
+   --output sample_output.npz
+</pre></div>
+</div>
+<p>支持的参数如下：</p>
+<table class="colwidths-given docutils align-default" id="id8">
+<caption><span class="caption-number">表 3.4 </span><span class="caption-text">model_runner 参数功能</span><a class="headerlink" href="#id8" title="此表格的永久链接"></a></caption>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 13%" />
+<col style="width: 64%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>参数名</p></th>
+<th class="head"><p>必选？</p></th>
+<th class="head"><p>说明</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>input</p></td>
+<td><p>是</p></td>
+<td><p>指定模型输入，npz文件</p></td>
+</tr>
+<tr class="row-odd"><td><p>model</p></td>
+<td><p>是</p></td>
+<td><p>指定模型文件，支持bmodel/mlir/onnx/tflite</p></td>
+</tr>
+<tr class="row-even"><td><p>dump_all_tensors</p></td>
+<td><p>否</p></td>
+<td><p>开启后对导出所有的结果，包括中间tensor的结果</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="npz-tool-py">
+<h3><span class="section-number">3.4.2. </span>npz_tool.py<a class="headerlink" href="#npz-tool-py" title="此标题的永久链接"></a></h3>
+<p>npz在TPU-MLIR工程中会大量用到，包括输入输出的结果等等。npz_tool.py用于处理npz文件。</p>
+<p>执行参考如下：</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>查看sample_out.npz中output的数据
+<span class="gp">$ </span>npz_tool.py dump sample_out.npz output
+</pre></div>
+</div>
+<p>支持的功能如下：</p>
+<table class="colwidths-given docutils align-default" id="id9">
+<caption><span class="caption-number">表 3.5 </span><span class="caption-text">npz_tool 功能</span><a class="headerlink" href="#id9" title="此表格的永久链接"></a></caption>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 77%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>功能</p></th>
+<th class="head"><p>描述</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>dump</p></td>
+<td><p>得到npz的所有tensor信息</p></td>
+</tr>
+<tr class="row-odd"><td><p>compare</p></td>
+<td><p>比较2个npz文件的差异</p></td>
+</tr>
+<tr class="row-even"><td><p>to_dat</p></td>
+<td><p>将npz导出为dat文件，连续的二进制存储</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="02_environment.html" class="btn btn-neutral float-left" title="2. 开发环境配置" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="04_over_design.html" class="btn btn-neutral float-right" title="4. 整体设计" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2022, SOPHGO.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

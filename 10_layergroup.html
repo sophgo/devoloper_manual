@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>10. LayerGroup &mdash; TPU-MLIR 0.3.3 文档</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/translations.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="11. GMEM分配" href="11_memassign.html" />
+    <link rel="prev" title="9. SubNet" href="09_subnet.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> TPU-MLIR
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">目录</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01_introduction.html">1. TPU-MLIR简介</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_environment.html">2. 开发环境配置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_user_interface.html">3. 用户界面</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_over_design.html">4. 整体设计</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_frontend.html">5. 前端转换</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_quantization.html">6. 量化</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_calibration.html">7. Calibration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_lowering.html">8. Lowering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_subnet.html">9. SubNet</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">10. LayerGroup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">10.1. 基本概念</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#backwardh">10.2. BackwardH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mem">10.3. 划分Mem周期</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lmem">10.4. LMEM分配</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#group">10.5. 划分最优Group</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="11_memassign.html">11. GMEM分配</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_codegen.html">12. CodeGen</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TPU-MLIR</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><span class="section-number">10. </span>LayerGroup</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/10_layergroup.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="layergroup">
+<h1><span class="section-number">10. </span>LayerGroup<a class="headerlink" href="#layergroup" title="此标题的永久链接"></a></h1>
+<section id="id1">
+<h2><span class="section-number">10.1. </span>基本概念<a class="headerlink" href="#id1" title="此标题的永久链接"></a></h2>
+<p>TPU芯片分为片外内存（或称Global Memory，简称GMEM）和片内内存（或称Local Memory，简称LMEM）。</p>
+<p>通常片外内存非常大（比如4GB），片内内存非常小（比如16MB）。神经网络模型的数据量和计算量</p>
+<p>都非常大，通常每层的OP都需要切分后放到Local Memory进行运算，结果再保存到Global Memory。</p>
+<p>LayerGroup就是让尽可能多的OP经过切分后能够在Local Memroy执行，而避免过多的Local和Grobal</p>
+<p>Memory的拷贝。</p>
+<dl class="simple">
+<dt>要解决的问题：</dt><dd><p>如何使Layer数据保持在有限的Local Memory进行运算，而不是反复进行Local与Global Memory之间的拷贝</p>
+</dd>
+<dt>基本思路：</dt><dd><p>通过切Activation的N和H，使每层Layer的运算始终在Local Memory中，如图(<a class="reference internal" href="#lg-slice"><span class="std std-ref">网络切分举例</span></a>)</p>
+</dd>
+</dl>
+<figure class="align-center" id="id2">
+<span id="lg-slice"></span><a class="reference internal image-reference" href="_images/lg_slice.png"><img alt="_images/lg_slice.png" src="_images/lg_slice.png" style="height: 9.5cm;" /></a>
+<figcaption>
+<p><span class="caption-number">图 10.1 </span><span class="caption-text">网络切分举例</span><a class="headerlink" href="#id2" title="此图像的永久链接"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="backwardh">
+<h2><span class="section-number">10.2. </span>BackwardH<a class="headerlink" href="#backwardh" title="此标题的永久链接"></a></h2>
+<p>对网络进行H切分的时候，大多数Layer输入和输出的H是一致的。但是对于Conv、Pool等等需要特别计算。</p>
+<p>以Conv举例，如图(<a class="reference internal" href="#backward-h"><span class="std std-ref">卷积BackwardH举例</span></a>)</p>
+<figure class="align-center" id="id3">
+<span id="backward-h"></span><a class="reference internal image-reference" href="_images/lg_backward.png"><img alt="_images/lg_backward.png" src="_images/lg_backward.png" style="height: 9.5cm;" /></a>
+<figcaption>
+<p><span class="caption-number">图 10.2 </span><span class="caption-text">卷积BackwardH举例</span><a class="headerlink" href="#id3" title="此图像的永久链接"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="mem">
+<h2><span class="section-number">10.3. </span>划分Mem周期<a class="headerlink" href="#mem" title="此标题的永久链接"></a></h2>
+<p>如何划分group? 首先把每一层Layer需要的lmem罗列出来，大体可以归为三类：</p>
+<ol class="arabic simple">
+<li><p>Activation Tensor，用于保存输入输出结果，没有使用者后直接释放</p></li>
+<li><p>Weight，用于保存权重，不切的情况下用完就释放；否则一直驻留在lmem</p></li>
+<li><p>Buffer，用于Layer运算保存中间结果，用完就释放</p></li>
+</ol>
+<p>然后依次广度优先的方式配置id，举例如图(<a class="reference internal" href="#lg-lmem"><span class="std std-ref">LMEM的ID分配</span></a>)</p>
+<figure class="align-center" id="id4">
+<span id="lg-lmem"></span><a class="reference internal image-reference" href="_images/lg_lmem.png"><img alt="_images/lg_lmem.png" src="_images/lg_lmem.png" style="height: 9.5cm;" /></a>
+<figcaption>
+<p><span class="caption-number">图 10.3 </span><span class="caption-text">LMEM的ID分配</span><a class="headerlink" href="#id4" title="此图像的永久链接"></a></p>
+</figcaption>
+</figure>
+<p>然后再配置周期，配置方法如图(<a class="reference internal" href="#lg-timestep"><span class="std std-ref">TimeStep分配</span></a>)</p>
+<figure class="align-center" id="id5">
+<span id="lg-timestep"></span><a class="reference internal image-reference" href="_images/lg_timestep.png"><img alt="_images/lg_timestep.png" src="_images/lg_timestep.png" style="height: 9.5cm;" /></a>
+<figcaption>
+<p><span class="caption-number">图 10.4 </span><span class="caption-text">TimeStep分配</span><a class="headerlink" href="#id5" title="此图像的永久链接"></a></p>
+</figcaption>
+</figure>
+<p>关于配置周期的细节如下：</p>
+<ul class="simple">
+<li><p>[T2,T7]，表示在T2开始的时候就要申请lmem，在T7结束的时候释放lmem</p></li>
+<li><p>w4的原始周期应该是[T5,T5]，但是被修正成[T2,T5]，因为在T2做卷积运算时w4可以被同时加载</p></li>
+<li><p>当N或者H被切分时，Weight不需要重新被加载，它的结束点会被修正为正无穷</p></li>
+</ul>
+</section>
+<section id="lmem">
+<h2><span class="section-number">10.4. </span>LMEM分配<a class="headerlink" href="#lmem" title="此标题的永久链接"></a></h2>
+<p>当n或h存在切分的情况下，weight常驻LMEM，每一个切分都可以继续使用weight。</p>
+<p>这时候会先分配weight，如图所示(<a class="reference internal" href="#lg-nh-alloc"><span class="std std-ref">有切分情况的分配</span></a>)</p>
+<figure class="align-center" id="id6">
+<span id="lg-nh-alloc"></span><a class="reference internal image-reference" href="_images/lg_nh_alloc.png"><img alt="_images/lg_nh_alloc.png" src="_images/lg_nh_alloc.png" style="height: 9.5cm;" /></a>
+<figcaption>
+<p><span class="caption-number">图 10.5 </span><span class="caption-text">有切分情况的分配</span><a class="headerlink" href="#id6" title="此图像的永久链接"></a></p>
+</figcaption>
+</figure>
+<p>当n和h都没有切分的情况下，weight和activation处理过程一样，不使用时就释放。</p>
+<p>这时候的分配过程，如图所示(<a class="reference internal" href="#lg-alloc"><span class="std std-ref">无切分情况的分配</span></a>)</p>
+<figure class="align-center" id="id7">
+<span id="lg-alloc"></span><a class="reference internal image-reference" href="_images/lg_alloc.png"><img alt="_images/lg_alloc.png" src="_images/lg_alloc.png" style="height: 9.5cm;" /></a>
+<figcaption>
+<p><span class="caption-number">图 10.6 </span><span class="caption-text">无切分情况的分配</span><a class="headerlink" href="#id7" title="此图像的永久链接"></a></p>
+</figcaption>
+</figure>
+<p>那么Lmem分配问题就可以转换成这些方块如何摆放问题（注意方块只能左右移动，不能上下移动）。</p>
+<p>另外lmem分配时优先不要跨bank。</p>
+<p>目前策略是按照op顺序依次分配，优先分配timestep长的，次分配lmem大的。</p>
+</section>
+<section id="group">
+<h2><span class="section-number">10.5. </span>划分最优Group<a class="headerlink" href="#group" title="此标题的永久链接"></a></h2>
+<figure class="align-center" id="id8">
+<img alt="_images/lg_step.png" src="_images/lg_step.png" />
+<figcaption>
+<p><span class="caption-number">图 10.7 </span><span class="caption-text">Group流程</span><a class="headerlink" href="#id8" title="此图像的永久链接"></a></p>
+</figcaption>
+</figure>
+<p>目前从尾部开始向头部方向划分group，优先切N，当N切到最小单位时还不能满足要求，则切h。</p>
+<p>当网络很深的时候，因为Conv、Pool等等算子会有重复计算部分，h切的过多导致重复部分过多；</p>
+<p>为了避免过多重复，当backward后的layer的输入，如果h_slice重复的部分&gt;h/2，则认为失败。</p>
+<p>举例：比如input的h = 100，经过切分后变成2个input，h[0, 80)和h[20, 100)，则重复部分为60，
+则认为失败；2个input对应h[0, 60)和h[20, 100)，重复部分为40，认为成功。</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="09_subnet.html" class="btn btn-neutral float-left" title="9. SubNet" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="11_memassign.html" class="btn btn-neutral float-right" title="11. GMEM分配" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2022, SOPHGO.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
